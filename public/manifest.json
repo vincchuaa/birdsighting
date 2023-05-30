@@ -1,0 +1,17 @@
+{
+  "lang": "en-uk",
+  "name": "Sightings app",
+  "short_name": "Record spotted birds",
+  "description": "A basic application that allows a user to record bird sightings",
+  "start_url": "/sightings",
+  "background_color": "#2f3d58",
+  "theme_color": "#2f3d58",
+  "orientation": "any",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "/images/bird.png",
+      "sizes": "512x512"
+    }
+  ]
+}

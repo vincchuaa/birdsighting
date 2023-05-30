@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Bird Sightings</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+        integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+        crossorigin=""></script>
+    <link rel='stylesheet' href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" />
+</head>
+
+<script src="../javascript/app.js"></script>
+<script src="../javascript/jquery-1.12.4.min.js"></script>
+<script src="../javascript/bootstrap.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<body>
+<% include ../../public/partials/header.ejs %>
+<div style="max-width: 800px; margin-left:50px; margin-top:30px">
+<h1>New Sighting</h1>
+<form action = "/sightings" method="POST" enctype="multipart/form-data" id="new-sighting">
+    <div class="mb-3">
+        <label for="exampleFormControlInput1" class="form-label">Your username: </label>
+        <input type="text" class="form-control" id="exampleFormControlInput1" name="username" value="<%=sighting.username%>" required>
+    </div>
+    <div class="mb-3">
+        <label for="exampleFormControlTextarea1" class="form-label">Short Description: </label>
+        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="shortdescription" required> <%=sighting.shortdescription%></textarea>
+    </div>
+    <div id="map" style="width: 800px; height: 600px;"></div>
+    <script src ="../javascript/map.js"></script>
+    <h4>Location:</h4>
+    <div class="mb-3">
+        <label>Latitude:</label>
+        <input class="form-control" type="Point" id= "locationlat" name="locationlat" value= "" readonly required> <!-- point -->
+        <label>Longitude:</label>
+        <input class="form-control" type="Point" id= "locationlong" name="locationlong" value = "" readonly required>
+    </div>
+    <div class="mb-3">
+        <button type="button" class="btn btn-primary" onclick="getCurrentLocation()">Get Current Location</button>
+        <script>
+            function getCurrentLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(showPosition);
+                } else {
+                    alert("Geolocation is not supported by this browser.");
+                }
+            }
+
+            function showPosition(position) {
+                const latitudeInput = document.getElementById("locationlat");
+                const longitudeInput = document.getElementById("locationlong");
+
+                latitudeInput.value = position.coords.latitude;
+                longitudeInput.value = position.coords.longitude;
+            }
+        </script>
+    </div>
+    <div class="mb-3">
+        <label>Day spotted: </label>
+        <input class="form-control" type="date" name="day" id ="day" required>
+        <label>Time spotted: </label>
+        <input class="form-control" type="time" name="time" id="date" required>
+    </div>
+    <h4>Identification:</h4>
+    <div class="mb-3">
+        <label for="exampleFormControlInput1" class="form-label">Common name: </label>
+        <input class="form-control" type="text" id="idname" name="idname" placeholder="If you are not sure, please search below" >
+        <label for="exampleFormControlInput1" class="form-label">Scientific name:  </label>
+        <input class="form-control" type="text" id="idsciname" name="idsciname" placeholder="If you are not sure, please search below">
+        <label for="exampleFormControlTextarea1" class="form-label">Description:  </label>
+        <textarea class="form-control" rows="3" name="iddescription" id="iddescription" placeholder="If you are not sure, please search below"></textarea>
+        <label for="exampleFormControlInput1" class="form-label">URI: </label>
+        <input class="form-control" type="text" id="idURI" name="idURI" placeholder="If you are not sure, please search below">
+    </div>
+    <div class="mb-3" style="max-width: 600px;">
+        <label for="formFile" class="form-label">Image: </label>
+        <input class="form-control" type="file" name="photo" accept="image/*" required>
+    </div>
+
+    <button type="submit" class="btn btn-success mb-3">Create Sighting</button>
+    <a href="/sightings" class="link-primary">Cancel</a>
+</form>
+</div>
+<div style="max-width: 1500px; margin-left:50px; margin-top:30px; height:600px;">
+<script src="../javascript/app.js"></script>
+<h1 id ="searchtag">Identification Search</h1>
+<form class="row g-3" action="/sightings/new" id="searchForm" method="POST">
+    <div class="col-auto">
+        <label for="birdName" class="form-label">Enter a bird name:</label>
+    </div>
+    <div class="col-auto">
+    <input class="form-control" type="text" id="birdName" name="birdName">
+    </div>
+    <div class="col-auto">
+    <button type="submit" class="btn btn-outline-success mb-3">Search</button>
+    </div>
+</form>
+<div id="tableContainer">
+    <style>
+        #tableContainer {
+            max-height: 300px; /* Adjust the maximum height according to your needs */
+            overflow: auto;
+        }
+    </style>
+<table class="table" id="birdTable">
+    <thead>
+    <tr>
+        <th>Common Name</th>
+        <th>Description</th>
+        <th>Scientific Name</th>
+        <th>URI</th>
+        <th>Select</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% for (const result of sparqlResults) { %>
+        <tr>
+            <td><%= result.commonName ? result.commonName.value : '' %></td>
+            <td><%= result.description ? result.description.value : '' %></td>
+            <td><%= result.genus ? result.genus.value : '' %> <%= result.species ? result.species.value : '' %></td>
+            <td><%= result.uri ? result.uri.value : '' %></td>
+            <td>
+                <button onclick="selectBird('<%= result.commonName ? result.commonName.value : '' %>', '<%= result.description ? result.description.value : '' %>',
+                        '<%= result.genus ? result.genus.value : '' %>', '<%= result.species ? result.species.value : '' %>', '<%= result.uri ? result.uri.value : ''%>')">Select</button>
+            </td>
+    <% } %>
+    </tbody>
+</table>
+</div>
+    <script>
+        function selectBird(commonName, description, genus, species, uri) {
+            const selectedCommonName = document.getElementById('idname');
+            selectedCommonName.value = commonName;
+
+            const selectedDescription = document.getElementById('iddescription');
+            selectedDescription.value = description;
+
+            const selectedSciName = document.getElementById('idsciname');
+            selectedSciName.value = genus + " " + species;
+
+            const selectedURI = document.getElementById('idURI');
+            selectedURI.value = uri;
+        }
+    </script>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

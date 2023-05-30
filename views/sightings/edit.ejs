@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel='stylesheet' href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" />
+<head>
+    <title>Bird Sightings</title>
+</head>
+<body>
+<% include ../../public/partials/header.ejs %>
+<div style="max-width: 800px; margin-left:50px; margin-top:30px">
+<h1>Edit Identification</h1>
+    <div id="notification" style="display: none;">
+    </div>
+    <form id="verifyName">
+        <label for="name">Enter your name:</label>
+        <input type="text" id="name" name="name" required>
+        <input type="hidden" id="correctuser" name="correctuser" value="<%=sighting.username%>">
+        <button type="submit" id="submitButton">Submit</button>
+    </form>
+    <div id = "hiddenContent" style="display: none">
+        <form action="/sightings/<%= sighting.id %>" method="POST" id="edit-sighting">
+            <div class="mb-3">
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="form-label">Edit identification common name: </label>
+                    <input type="hidden" name="idnumber" id="idnumber" value="<%=sighting.identification%>">
+                    <input class="form-control" type="text" name="idcommon" id="idcommon" value= "<%=identification.commonname%>">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="form-label">Edit identification scientific name:</label>
+                    <input class="form-control" type="text" name="idscientific" id="idscientific" value= "<%=identification.scientificname%>">
+                </div>
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="form-label">Edit identification description: </label>
+                    <input class="form-control" rows="3" type="textarea" name="iddescription" id="iddescription" value="<%=identification.description%>"></input>
+                </div>
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="form-label">Edit identification URI: </label>
+                    <input class="form-control" type="text" name="idURI" id="idURI" value="<%=identification.url%>">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success mb-3">Update</button>
+            <a href="/sightings/" class="link-primary">Cancel</a>
+        </form>
+        </div>
+
+        <div style="max-width: 1500px; margin-left:50px; margin-top:30px; height:600px;">
+        <h1 id="searchtag">Search for your Identification</h1>
+        <form class="row g-3" action="/sightings/<%= sighting.id %>/edit" method="POST" id="searchForm">
+            <div class="col-auto">
+                <label for="birdName" class="form-label">Enter a bird name:</label>
+            </div>
+            <div class="col-auto">
+                <input class="form-control" type="text" id="birdName" name="birdName">
+                <input type="hidden" name="sightingID" id="sightingID" value="<%= sighting.id %>">
+                <input type="hidden" name="identificationID" id="identificationID" value="<%= identification.id %>">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-success mb-3">Search</button>
+            </div>
+        </form>
+        <div id="tableContainer">
+            <style>
+                #tableContainer {
+                    max-height: 300px; /* Adjust the maximum height according to your needs */
+                    overflow: auto;
+                }
+            </style>
+            <table class="table" id="birdTable">
+                <thead>
+                <tr>
+                    <th>Common Name</th>
+                    <th>Description</th>
+                    <th>Scientific Name</th>
+                    <th>URI</th>
+                    <th>Select</th>
+                </tr>
+                </thead>
+                <tbody>
+                <% for (const result of sparqlResults) { %>
+                <tr>
+                    <td><%= result.commonName ? result.commonName.value : '' %></td>
+                    <td><%= result.description ? result.description.value : '' %></td>
+                    <td><%= result.genus ? result.genus.value : '' %> <%= result.species ? result.species.value : '' %></td>
+                    <td><%= result.uri ? result.uri.value : '' %></td>
+                    <td>
+                        <button onclick="selectBird('<%= result.commonName ? result.commonName.value : '' %>', '<%= result.description ? result.description.value : '' %>',
+                                '<%= result.genus ? result.genus.value : '' %>', '<%= result.species ? result.species.value : '' %>', '<%= result.uri ? result.uri.value : ''%>')">Select</button>
+                    </td>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        <script>
+            function selectBird(commonName, description, genus, species, uri) {
+                const selectedCommonName = document.getElementById('idcommon');
+                selectedCommonName.value = commonName;
+
+                const selectedDescription = document.getElementById('iddescription');
+                selectedDescription.value = description;
+
+                const selectedSciName = document.getElementById('idscientific');
+                selectedSciName.value = genus + " " + species;
+
+                const selectedURI = document.getElementById('idURI');
+                selectedURI.value = uri;
+            }
+        </script>
+        </div>
+        <script src="/javascript/edit.js"></script>
+        </div>
+    <script src="/javascript/verifyuser.js"></script>
+    </div>
+
+</body>
+</html>
